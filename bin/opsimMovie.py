@@ -49,7 +49,10 @@ def getData(opsDb, sqlconstraint):
     # Add stacker columns.
     hourangleStacker = stackers.HourAngleStacker()
     simdata = hourangleStacker.run(simdata)
-    filterStacker = stackers.FilterColorStacker()
+    # ZTF
+    filterStacker = stackers.FilterColorStacker(filterMap={'g': 1, 'r': 2})
+    filterStacker.filter_rgb_map = {'g': (0, 1, 0),    # green
+                                    'r': (1, 0, 0)}    # red
     simdata = filterStacker.run(simdata)
     # Fetch field data.
     fields = opsDb.fetchFieldsFromFieldTable()
@@ -70,7 +73,8 @@ def setupMetrics(opsimName, metadata, plotlabel='', t0=0, tStep=40. / 24. / 60. 
         plotDictList.append({'colorMin': 0, 'colorMax': nvisitsMax,
                              'xlabel': 'Number of visits', 'title': 'Cumulative visits (all bands)',
                              'label': plotlabel, 'metricIsColor': False})
-        for f in (['u', 'g', 'r', 'i', 'z', 'y']):
+        # for f in (['u', 'g', 'r', 'i', 'z', 'y']):
+        for f in (['g', 'r']):
             metricList.append(metrics.CountSubsetMetric(
                 'filter', subset=f, metricName='Nvisits_' + f))
             plotDictList.append({'colorMin': 0, 'colorMax': colorMax, 'cbarFormat': '%d',
@@ -96,7 +100,8 @@ def setupMovieSlicer(simdata, bins, verbose=False):
     return movieslicer
 
 
-def addHorizon(horizon_altitude=np.radians(20.), lat_telescope=Site(name='LSST').latitude_rad, raCen=0.):
+# ZTF latitute
+def addHorizon(horizon_altitude=np.radians(30.), lat_telescope=np.radians(33.35731944), raCen=0.):
     """
     Adds a horizon at horizon_altitude, using the telescope latitude lat_telescope.
     Returns the lon/lat points that would be appropriate to add to a SkyMap plot centered on raCen.
@@ -131,7 +136,8 @@ def runSlices(opsimName, metadata, simdata, fields, bins, args, opsDb, verbose=F
     # Set up formatting for output suffix.
     sliceformat = '%s0%dd' % ('%', int(np.log10(len(movieslicer))) + 1)
     # Get the telescope latitude info.
-    lat_tele = Site(name='LSST').latitude_rad
+    #lat_tele = Site(name='LSST').latitude_rad
+    lat_tele = np.radians(33.35731944)
     # Run through the movie slicer slicePoints and generate plots at each
     # point.
     for i, ms in enumerate(movieslicer):
@@ -208,10 +214,15 @@ def runSlices(opsimName, metadata, simdata, fields, bins, args, opsDb, verbose=F
                 plt.figtext(0.75, 0.9, '%s' % (plotlabel), bbox=dict(
                     boxstyle='Round, pad=0.7', fc='w', ec='k', alpha=0.5))
                 # Add a legend for the filters.
-                filterstacker = stackers.FilterColorStacker()
-                for i, f in enumerate(['u', 'g', 'r', 'i', 'z', 'y']):
+                # ZTF
+                filterStacker = stackers.FilterColorStacker(
+                    filterMap={'g': 1, 'r': 2})
+                filterStacker.filter_rgb_map = {'g': (0, 1, 0),    # green
+                                                'r': (1, 0, 0)}    # red
+                # for i, f in enumerate(['u', 'g', 'r', 'i', 'z', 'y']):
+                for i, f in enumerate(['g', 'r']):
                     plt.figtext(0.92, 0.55 - i * 0.035, f,
-                                color=filterstacker.filter_rgb_map[f])
+                                color=filterStacker.filter_rgb_map[f])
                 # Add a moon.
                 moonRA = np.mean(simdatasubset[obsnow]['moonRA'])
                 lon = -(moonRA - raCen - np.pi) % (np.pi * 2) - np.pi
@@ -226,7 +237,7 @@ def runSlices(opsimName, metadata, simdata, fields, bins, args, opsDb, verbose=F
                 ecliptic = Line2D([], [], color='r', label="Ecliptic plane")
                 galaxy = Line2D([], [], color='b', label="Galactic plane")
                 horizon = Line2D([], [], color='k', alpha=0.3,
-                                 label="20 deg elevation limit")
+                                 label="30 deg elevation limit")
                 moon = Line2D([], [], color='k', linestyle='', marker='o', markersize=8, alpha=alpha,
                               label="\nMoon (Dark=Full)\n         (Light=New)")
                 zenith = Line2D([], [], color='k', linestyle='',
