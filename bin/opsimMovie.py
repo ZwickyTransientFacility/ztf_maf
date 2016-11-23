@@ -1,4 +1,4 @@
-# python $SIMS_MAF_DIR/examples/pythonScripts/opsimMovie.py enigma_1189_sqlite.db --sqlConstraint 'night=130' --outDir Output
+# python opsimMovie.py enigma_1189_sqlite.db --dbdir ../sims --sqlConstraint 'night=130' --outDir Output
 #
 # --ips = number of images to stitch together per second of view (default is 10).
 # --fps = frames per second for the output video .. default just matches ips. If specified as higher than ips,
@@ -30,6 +30,10 @@ from lsst.sims.utils import Site
 import time
 import warnings
 import fnmatch
+
+import sys
+sys.path.append('..')
+from ztf_maf.plots import ZTFBaseSkyMap
 
 
 def dtime(time_prev):
@@ -72,17 +76,20 @@ def setupMetrics(opsimName, metadata, plotlabel='', t0=0, tStep=40. / 24. / 60. 
         metricList.append(metrics.CountMetric('expMJD', metricName='Nvisits'))
         plotDictList.append({'colorMin': 0, 'colorMax': nvisitsMax,
                              'xlabel': 'Number of visits', 'title': 'Cumulative visits (all bands)',
-                             'label': plotlabel, 'metricIsColor': False})
+                             'label': plotlabel, 'metricIsColor': False,
+                             'radius': np.radians(3.689)})
         # for f in (['u', 'g', 'r', 'i', 'z', 'y']):
         for f in (['g', 'r']):
             metricList.append(metrics.CountSubsetMetric(
                 'filter', subset=f, metricName='Nvisits_' + f))
             plotDictList.append({'colorMin': 0, 'colorMax': colorMax, 'cbarFormat': '%d',
                                  'xlabel': 'Number of Visits', 'title': '%s band' % (f),
-                                 'label': plotlabel, 'metricIsColor': False})
+                                 'label': plotlabel, 'metricIsColor': False,
+                                 'radius': np.radians(3.689)})
     metricList.append(metrics.FilterColorsMetric(t0=t0, tStep=tStep))
     plotDictList.append({'title': 'Simulation %s: %s' % (opsimName, metadata), 'bgcolor': None,
-                         'metricIsColor': True})
+                         'metricIsColor': True,
+                         'radius': np.radians(3.689)})
     dt, t = dtime(t)
     if verbose:
         print 'Set up metrics %f s' % (dt)
@@ -201,7 +208,8 @@ def runSlices(opsimName, metadata, simdata, fields, bins, args, opsDb, verbose=F
         # manipulation).
         for mb in bundles:
             ph.setMetricBundles([mb])
-            fignum = ph.plot(plotFunc=plots.BaseSkyMap(),
+            # fignum = ph.plot(plotFunc=plots.BaseSkyMap(),
+            fignum = ph.plot(plotFunc=ZTFBaseSkyMap(),
                              plotDicts={'raCen': raCen})
             fig = plt.figure(fignum)
             ax = plt.gca()
@@ -372,7 +380,8 @@ if __name__ == '__main__':
 
     # Need to set up the metrics to get their names, but don't need to have
     # realistic arguments.
-    metricList, plotDictList = setupMetrics(opsimName, metadata)
+    metricList, plotDictList = setupMetrics(
+        opsimName, metadata)
     stitchMovie(metricList, args)
     end_t, start_t = dtime(start_t)
     print 'Total time to create movie: ', end_t
