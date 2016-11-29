@@ -137,7 +137,7 @@ def addHorizon(horizon_altitude=np.radians(30.), lat_telescope=np.radians(33.357
     return lon, lat
 
 
-def runSlices(opsimName, metadata, simdata, fields, bins, args, opsDb, verbose=False):
+def runSlices(opsimName, metadata, simdata, fields, bins, args, opsDb, verbose=False, onlyFilterColors=True):
     # Set up the movie slicer.
     movieslicer = setupMovieSlicer(simdata, bins)
     # Set up formatting for output suffix.
@@ -167,8 +167,11 @@ def runSlices(opsimName, metadata, simdata, fields, bins, args, opsDb, verbose=F
         days = times_from_start - years * 365
         plotlabel = 'Year %d Day %.4f' % (years, days)
         # Set up metrics.
-        metricList, plotDictList = setupMetrics(opsimName, metadata, plotlabel=plotlabel,
-                                                t0=ms['slicePoint']['binRight'], tStep=tstep, years=years, verbose=verbose)
+        metricList, plotDictList = setupMetrics(opsimName, metadata,
+                                                plotlabel=plotlabel, t0=ms[
+                                                    'slicePoint']['binRight'],
+                                                tStep=tstep, years=years, verbose=verbose,
+                                                onlyFilterColors=onlyFilterColors)
         # Identify the subset of simdata in the movieslicer 'data slice'
         simdatasubset = simdata[ms['idxs']]
         # Set up opsim slicer on subset of simdata provided by movieslicer
@@ -300,12 +303,14 @@ if __name__ == '__main__':
     parser.add_argument("opsimDb", type=str, help="Opsim sqlite db file")
     parser.add_argument("--dbDir", type=str, default='.',
                         help="Directory containing opsim sqlite db file")
-    parser.add_argument("--sqlConstraint", type=str, default="filter='r'",
+    parser.add_argument("--sqlConstraint", type=str, default="night=0",
                         help="SQL constraint, such as filter='r' or propID=182")
     parser.add_argument("--movieStepsize", type=float, default=0, help="Step size (in days) for movie slicer. "
                         "Default sets 1 visit = 1 step.")
     parser.add_argument("--outDir", type=str,
                         default='Output', help="Output directory.")
+    parser.add_argument("--onlyFilterColors", default=True,
+                        help="Only compute the filter colors movie")
     parser.add_argument("--addPreviousObs", action='store_true', default=False,
                         help="Add all previous observations into movie (as background).")
     parser.add_argument("--skipComp", action='store_true', default=False,
@@ -376,12 +381,13 @@ if __name__ == '__main__':
         # Run the movie slicer (and at each step, setup opsim slicer and
         # calculate metrics).
         runSlices(opsimName, metadata, simdata, fields,
-                  bins, args, oo, verbose=verbose)
+                  bins, args, oo, verbose=verbose,
+                  onlyFilterColors=args.onlyFilterColors)
 
     # Need to set up the metrics to get their names, but don't need to have
     # realistic arguments.
     metricList, plotDictList = setupMetrics(
-        opsimName, metadata)
+        opsimName, metadata, onlyFilterColors=args.onlyFilterColors)
     stitchMovie(metricList, args)
     end_t, start_t = dtime(start_t)
     print 'Total time to create movie: ', end_t
