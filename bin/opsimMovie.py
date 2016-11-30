@@ -4,6 +4,8 @@
 # --fps = frames per second for the output video .. default just matches ips. If specified as higher than ips,
 #         the additional frames will be copied to meet the fps requirement. If fps is lower than ips, images will be
 #         removed from the sequence to maintain fps. As a rule of thumb, fps>30 is undetectable to the human eye.
+# --movieStepsize (in days; default one visit)
+# --onlyFilterColors (if set, only do filter colors metrics/movies)
 # --movieLength = can specify the length of the output video (in seconds), then automatically calculate corresponding ips
 #         and fps based on the number of movie slices.
 # --skipComp = skip computing the metrics and generating plots, just use files from disk.
@@ -68,8 +70,8 @@ def setupMetrics(opsimName, metadata, plotlabel='', t0=0, tStep=40. / 24. / 60. 
     # Set up metrics and plotDicts (they will be bundled with the appropriate
     # opsim slicers below).
     t = time.time()
-    nvisitsMax = 90 * (years + 1)
-    colorMax = int(nvisitsMax / 4)
+    nvisitsMax = 250 * (years + 1)
+    colorMax = int(nvisitsMax / 2)
     metricList = []
     plotDictList = []
     if not onlyFilterColors:
@@ -309,7 +311,7 @@ if __name__ == '__main__':
                         "Default sets 1 visit = 1 step.")
     parser.add_argument("--outDir", type=str,
                         default='Output', help="Output directory.")
-    parser.add_argument("--onlyFilterColors", default=True,
+    parser.add_argument("--onlyFilterColors", action='store_true', default=False,
                         help="Only compute the filter colors movie")
     parser.add_argument("--addPreviousObs", action='store_true', default=False,
                         help="Add all previous observations into movie (as background).")
@@ -366,7 +368,7 @@ if __name__ == '__main__':
         else:
             end_date = simdata['expMJD'].max()
             bins = np.arange(start_date, end_date +
-                             args.movieStepSize / 2.0, args.movieStepSize, float)
+                             args.movieStepsize / 2.0, args.movieStepsize, float)
         if args.addPreviousObs:
             # Go back and grab all the data, including all previous
             # observations.

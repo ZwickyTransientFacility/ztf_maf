@@ -3,7 +3,7 @@ from functools import wraps
 import matplotlib.path as mplPath
 
 import lsst.sims.maf.slicers as slicers
-from lsst.sims.maf.plots import HealpixSkyMap
+from lsst.sims.maf.plots import HealpixSkyMap, HealpixHistogram
 from lsst.sims.maf.utils.mafUtils import gnomonic_project_toxy
 
 
@@ -19,6 +19,8 @@ class HealpixZTFSlicer(slicers.HealpixSDSSSlicer):
                                                radius=radius, leafsize=leafsize,
                                                useCache=useCache, nside=nside)
         self.plotFuncs = [HealpixSkyMap, ]
+        # TODO: HealpixHistogram raises ValueError: HealpixHistogram is for use with healpix slicer.
+        #self.plotFuncs = [HealpixSkyMap, HealpixHistogram]
         # radius needs to be chip size
 
     def setupSlicer(self, simData, maps=None):
