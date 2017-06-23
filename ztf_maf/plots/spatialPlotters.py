@@ -8,11 +8,13 @@ from matplotlib.patches import Polygon
 
 class ZTFBaseSkyMap(BaseSkyMap):
 
-    def __init__(self):
+    def __init__(self, aspect_ratio = 1.0):
         super(ZTFBaseSkyMap, self).__init__()
+        # width / length
+        self.aspect_ratio = aspect_ratio
 
     def _plot_tissot_ellipse(self, lon, lat, radius, ax=None, **kwargs):
-        """Hack to plot ZTF square FOV
+        """Hack to plot PTF/ZTF rectangular/square FOV
         Parameters
         ----------
         lon : float or array_like
@@ -20,7 +22,7 @@ class ZTFBaseSkyMap(BaseSkyMap):
         lat : float or array_like
         latitude-like of field centers (radians)
         radius : float or array_like
-        radius of *inscribed* circle (radians)
+        radius of *circumscribed* circle (radians)
         ax : Axes object (optional)
         matplotlib axes instance on which to draw polygon patches
         Other Parameters
@@ -35,12 +37,15 @@ class ZTFBaseSkyMap(BaseSkyMap):
         if ax is None:
             ax = plt.gca()
         for l, b, r in np.broadcast(lon, lat, radius):
-            bp = b + r
-            bm = b - r
-            xy = np.array([[l - r / np.cos(bm), bm],
-                           [l + r / np.cos(bm), bm],
-                           [l + r / np.cos(bp), bp],
-                           [l - r / np.cos(bp), bp]])
+            theta = np.arctan(1/self.aspect_ratio)
+            dy = r * np.sin(theta)
+            dx = r * np.cos(theta)
+            bp = b + dy 
+            bm = b - dy
+            xy = np.array([[l - dx / np.cos(bm), bm],
+                           [l + dx / np.cos(bm), bm],
+                           [l + dx / np.cos(bp), bp],
+                           [l - dx / np.cos(bp), bp]])
             poly = Polygon(xy, closed=True, **kwargs)
             polygons.append(poly)
         return polygons

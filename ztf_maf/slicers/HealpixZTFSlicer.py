@@ -9,11 +9,18 @@ from lsst.sims.maf.utils.mafUtils import gnomonic_project_toxy
 
 # create a class for pixelizing the data
 class HealpixZTFSlicer(slicers.HealpixSDSSSlicer):
-    """For use with ZTF simulated """
+    """For use with ZTF simulated data"""
 
     def __init__(self, nside=128, lonCol='FieldRA', latCol='FieldDec', verbose=True,
-                 useCache=True, radius=3.5 * np.sqrt(2), leafsize=100, **kwargs):
+                 useCache=True, fov_hwidth = 3.5, fov_hlength = 3.5,
+                 leafsize=100, aspect_ratio = 1.0, **kwargs):
         """Using one corner of the chip as the spatial key and the diagonal as the radius.  """
+
+        # degrees
+        self.fov_hwidth = fov_hwidth
+        self.fov_hlength = fov_hlength
+        radius = np.sqrt(self.fov_hwidth**2. +  self.fov_hlength**2.)
+
         super(HealpixZTFSlicer, self).__init__(verbose=verbose,
                                                lonCol=lonCol, latCol=latCol,
                                                radius=radius, leafsize=leafsize,
@@ -22,7 +29,7 @@ class HealpixZTFSlicer(slicers.HealpixSDSSSlicer):
         # TODO: HealpixHistogram raises ValueError: HealpixHistogram is for use with healpix slicer.
         #self.plotFuncs = [HealpixSkyMap, HealpixHistogram]
         # radius needs to be chip size
-
+        
     def setupSlicer(self, simData, maps=None):
         """
         Use simData[self.lonCol] and simData[self.latCol]
@@ -53,17 +60,17 @@ class HealpixZTFSlicer(slicers.HealpixSDSSSlicer):
 
             # add positions of chip corners as ra1-ra4.  1 in upper left, 4 in
             # lower left
-            ZTF_RA_HWID = np.radians(3.50)
-            ZTF_DEC_HWID = np.radians(3.50)
-            ra1 = simData['fieldRA'][initIndices] - ZTF_RA_HWID
-            ra2 = simData['fieldRA'][initIndices] + ZTF_RA_HWID
-            ra3 = simData['fieldRA'][initIndices] + ZTF_RA_HWID
-            ra4 = simData['fieldRA'][initIndices] - ZTF_RA_HWID
+            rhwid = np.radians(self.fov_hwidth)
+            rhlen = np.radians(self.fov_hlength)
+            dec1 = simData['fieldDec'][initIndices] + rhlen
+            dec2 = simData['fieldDec'][initIndices] + rhlen
+            dec3 = simData['fieldDec'][initIndices] - rhlen
+            dec4 = simData['fieldDec'][initIndices] - rhlen
 
-            dec1 = simData['fieldDec'][initIndices] + ZTF_DEC_HWID
-            dec2 = simData['fieldDec'][initIndices] + ZTF_DEC_HWID
-            dec3 = simData['fieldDec'][initIndices] - ZTF_DEC_HWID
-            dec4 = simData['fieldDec'][initIndices] - ZTF_DEC_HWID
+            ra1 = simData['fieldRA'][initIndices] - rhwid/np.cos(dec1)
+            ra2 = simData['fieldRA'][initIndices] + rhwid/np.cos(dec2)
+            ra3 = simData['fieldRA'][initIndices] + rhwid/np.cos(dec3)
+            ra4 = simData['fieldRA'][initIndices] - rhwid/np.cos(dec4)
 
             # Gnomic project all the corners that are near the slice point,
             # centered on slice point
