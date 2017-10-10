@@ -230,10 +230,10 @@ def runSlices(opsimName, metadata, simdata, fields, bins, args, opsDb, verbose=F
                 # Add a legend for the filters.
                 # ZTF
                 filterStacker = stackers.FilterColorStacker(
-                    filterMap={'g': 1, 'r': 2})
+                    filterMap={'g': 1, 'r': 2, 'i': 3})
                 filterStacker.filter_rgb_map = {'g': (0, 1, 0),    # green
                                                 'r': (1, 0, 0),    # red
-                                                'r': (1, 0, 1)}    # red
+                                                'i': (1, 0, 1)}    # red
                 # for i, f in enumerate(['u', 'g', 'r', 'i', 'z', 'y']):
                 for i, f in enumerate(['g', 'r', 'i']):
                     plt.figtext(0.92, 0.55 - i * 0.035, f,
