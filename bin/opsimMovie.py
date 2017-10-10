@@ -56,9 +56,10 @@ def getData(opsDb, sqlconstraint):
     hourangleStacker = stackers.HourAngleStacker()
     simdata = hourangleStacker.run(simdata)
     # ZTF
-    filterStacker = stackers.FilterColorStacker(filterMap={'g': 1, 'r': 2})
+    filterStacker = stackers.FilterColorStacker(filterMap={'g': 1, 'r': 2, 'i': 3})
     filterStacker.filter_rgb_map = {'g': (0, 1, 0),    # green
-                                    'r': (1, 0, 0)}    # red
+                                    'r': (1, 0, 0),    # red
+                                    'i': (1, 0, 1)}    # red
     simdata = filterStacker.run(simdata)
     # Fetch field data.
     fields = opsDb.fetchFieldsFromFieldTable()
@@ -81,7 +82,7 @@ def setupMetrics(opsimName, metadata, plotlabel='', t0=0, tStep=40. / 24. / 60. 
                              'label': plotlabel, 'metricIsColor': False,
                              'radius': np.radians(3.689)})
         # for f in (['u', 'g', 'r', 'i', 'z', 'y']):
-        for f in (['g', 'r']):
+        for f in (['g', 'r', 'i']):
             metricList.append(metrics.CountSubsetMetric(
                 'filter', subset=f, metricName='Nvisits_' + f))
             plotDictList.append({'colorMin': 0, 'colorMax': colorMax, 'cbarFormat': '%d',
@@ -231,9 +232,10 @@ def runSlices(opsimName, metadata, simdata, fields, bins, args, opsDb, verbose=F
                 filterStacker = stackers.FilterColorStacker(
                     filterMap={'g': 1, 'r': 2})
                 filterStacker.filter_rgb_map = {'g': (0, 1, 0),    # green
-                                                'r': (1, 0, 0)}    # red
+                                                'r': (1, 0, 0),    # red
+                                                'r': (1, 0, 1)}    # red
                 # for i, f in enumerate(['u', 'g', 'r', 'i', 'z', 'y']):
-                for i, f in enumerate(['g', 'r']):
+                for i, f in enumerate(['g', 'r', 'i']):
                     plt.figtext(0.92, 0.55 - i * 0.035, f,
                                 color=filterStacker.filter_rgb_map[f])
                 # Add a moon.
